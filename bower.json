@@ -1,0 +1,25 @@
+{
+  "name": "angular-dUtil",
+  "version": "0.0.0",
+  "authors": [
+    "Yiting Li <yiting.star@gmail.com>"
+  ],
+  "description": "A simple date range picker directive",
+  "main": "dUtil.js",
+  "keywords": [
+    "angularjs",
+    "date-picker"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.0.6",
+    "moment": "~2.9.0"
+  }
+}

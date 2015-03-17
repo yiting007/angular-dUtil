@@ -1,0 +1,59 @@
+
+.datePicker{
+    position: relative;
+    display: inline-block;
+}
+
+.datePickerInfo{
+    cursor: pointer;
+    /* width: 100%; */  /* why this doesn't work? */
+    width: 13em;
+}
+
+.calendar{
+    position: absolute;
+    display: block;
+    border: 1px solid #66CCFF;
+}
+
+.selectMonthYearBar{
+    border-bottom: 1px solid #66CCFF;
+}
+
+.fromToBar{
+    border-top: 1px solid #66CCFF;
+}
+
+.dateHead{
+}
+
+.dateTable{
+
+}
+
+.day{
+    cursor: pointer;
+    border: 1px solid #F0F5F5;
+}
+
+.day:hover{
+    background-color: #66CCFF;
+}
+
+.activeDates{ 
+}
+
+.clickedDates{
+    background-color: #66CCFF;
+}
+
+.selectedDates{
+    background-color: #FFFF66;
+}
+
+.invalidDates{
+}
+
+.fromToDisplay{
+    border-color: #3333FF;
+}
