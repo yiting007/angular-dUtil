@@ -4,7 +4,7 @@ app.directive('dUtilDiv', function($window){  //register a directive
     return {
         restrict: 'E',
     replace: false,
-    templateUrl: 'myUtil/dUtil_templates.html',
+    template: '<div class=datePicker ng-click=handleClick()><input class=datePickerInfo ng-click=clickDatePicker() ng-model=displayDate readonly placeholder="select date range"><div class=calendar ng-show=expandDatePicker><div class=selectMonthYearBar><button ng-click=previousMonth()>Previous</button><select ng-model=range ng-options="range.name for range in ranges" ng-change=quickDateRange(range)></select><button ng-click=nextMonth()>Next</button></div><table><thead class=dateHead><td ng-repeat="d in dpObj.displayYearMonth track by $index">{{ d }}<td ng-repeat="row in dpObj.rows"><div><table class=dateTable><thead><tr><td>Su<td>Mo<td>Tu<td>We<td>Th<td>Fr<td>Sa<tbody><tr ng-repeat="week in row"><td ng-repeat="day in week track by $index" class=day ng-class="getClassForDays($parent.$index, $index, $parent.$parent.$index)" ng-click="onDayClick($parent.$index, $index, $parent.$parent.$index)">{{ day }}</table></div><tbody><tbody></table><div class=fromToBar>From <input ng-class="{fromToDisplay: fromDateToSelect}" ng-model=fromDate readonly>To <input ng-class="{fromToDisplay: !fromDateToSelect}" ng-model=toDate readonly></div></div></div>',
     link: function(scope, element, attrs){
         var clickInsideDatePicker = false;
         var fromBeforeTo = true;
