@@ -11,7 +11,8 @@
 }
 
 .datePickerTable{
-    border-collapse: collapse;
+    border-collapse: initial;
+    border-spacing: 10px;
 }
 
 .calendar{
@@ -79,5 +80,5 @@
 }
 
 .fromToDisplay{
-    border-color: #3333FF;
+    border-color: #4D90FE;
 }

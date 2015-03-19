@@ -6,7 +6,7 @@ app.directive('datePicker', function($window){  //register a directive
     // require: 'ngModel',
     replace: false,
     // templateUrl: 'myUtil/dUtil_templates.html',
-    template: ' <div class="datePicker" ng-click="handleClick()"> <input class="datePickerInfo" type="text"  ng-click="clickDatePicker()" ng-model="displayDate" readonly placeholder="select date range"></input> <div class="calendar" ng-show="expandDatePicker"> <div class="selectMonthYearBar"> <button ng-click="previousMonth()">Previous</button> <select ng-model="range" ng-options="range.name for range in ranges" ng-change="quickDateRange(range)"></select> <button ng-click="nextMonth()">Next</button> </div> <table class="datePickerTable"> <thead class="calendarHead"> <td ng-repeat="d in dpObj.displayYearMonth track by $index">{{ d }} </td> </thead> <tr class="calendarTable"> <td ng-repeat="row in dpObj.rows"> <table class="dateTable"> <thead class="dateHead"> <tr> <td>S</td> <td>M</td> <td>T</td> <td>W</td> <td>T</td> <td>F</td> <td>S</td> </tr> </thead> <tbody> <tr ng-repeat="week in row"> <td ng-repeat="day in week track by $index" class="day" ng-class="getClassForDays($parent.$index, $index, $parent.$parent.$index)" ng-click="onDayClick($parent.$index, $index, $parent.$parent.$index)">{{ day }}</td> </tr> </tbody> </table> </td> </tr> </table> <div class=fromToBar> From <input ng-class="{fromToDisplay: fromDateToSelect}" ng-model="fromDate" type="text" readonly></input> To <input ng-class="{fromToDisplay: !fromDateToSelect}" ng-model="toDate" type="text" readonly></input> </div> </div> </div> ',
+    template: ' <div class="datePicker" ng-click="handleClick()"> <input class="datePickerInfo" type="text"  ng-click="clickDatePicker()" ng-model="displayDate" readonly placeholder="select date range"></input> <div class="calendar" ng-show="expandDatePicker"> <div class="selectMonthYearBar"> <button ng-click="previousMonth()">&#8592</button> <select ng-model="range" ng-options="range.name for range in ranges" ng-change="quickDateRange(range)"></select> <button ng-click="nextMonth()">&#8594</button> </div> <table class="datePickerTable"> <thead class="calendarHead"> <td ng-repeat="d in dpObj.displayYearMonth track by $index">{{ d }} </td> </thead> <tr class="calendarTable"> <td ng-repeat="row in dpObj.rows"> <table class="dateTable"> <thead class="dateHead"> <tr> <td>S</td> <td>M</td> <td>T</td> <td>W</td> <td>T</td> <td>F</td> <td>S</td> </tr> </thead> <tbody> <tr ng-repeat="week in row"> <td ng-repeat="day in week track by $index" class="day" ng-class="getClassForDays($parent.$index, $index, $parent.$parent.$index)" ng-click="onDayClick($parent.$index, $index, $parent.$parent.$index)">{{ day }}</td> </tr> </tbody> </table> </td> </tr> </table> <div class=fromToBar> From <input ng-class="{fromToDisplay: fromDateToSelect}" ng-model="fromDate" type="text" readonly></input> To <input ng-class="{fromToDisplay: !fromDateToSelect}" ng-model="toDate" type="text" readonly></input> </div> </div> </div> ',
 
     link: function(scope, element, attrs){
         var clickInsideDatePicker = false;
@@ -273,7 +273,8 @@ app.directive('datePicker', function($window){  //register a directive
         format: '=?',
         calendarNum: '=?',
         fromDate: '=?',
-        toDate: '=?'
+        toDate: '=?',
+        range: '=?'
     },
     controller: 
         function($scope){
