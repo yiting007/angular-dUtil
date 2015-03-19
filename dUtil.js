@@ -35,7 +35,7 @@ app.directive('datePicker', function($window){  //register a directive
         {name: 'Last 3 Months', v: '91'}, 
         {name: 'Last 12 Months', v: '364'} 
         ];
-        scope.range = scope.ranges[0];
+        scope.range = scope.ranges[4];  //set default as one month
 
         var calendarNum = scope.calendarNum;
         var dateFormat = scope.format;
@@ -59,6 +59,7 @@ app.directive('datePicker', function($window){  //register a directive
                 scope.year = moment().year();
                 scope.month = moment().month() + 1;
                 calUpdates(true);
+                scope.quickDateRange(scope.range);
             }
             if(newValue){
                 if(!scope.day){
