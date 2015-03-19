@@ -1,58 +1,81 @@
 
 .datePicker{
-    position: relative;
-    display: inline-block;
+    display: block;
 }
 
 .datePickerInfo{
     cursor: pointer;
     /* width: 100%; */  /* why this doesn't work? */
     width: 13em;
+    text-align: center;
+}
+
+.datePickerTable{
+    border-collapse: collapse;
 }
 
 .calendar{
     position: absolute;
     display: block;
-    border: 1px solid #66CCFF;
+    border: 1px solid #000066;
+    background-color: #FFFFFF;
+    text-align: center;
     z-index: 1010;
 }
 
-.selectMonthYearBar{
-    border-bottom: 1px solid #66CCFF;
+.calendarHead{
+    background-color: #E6E6E6;
 }
 
-.fromToBar{
-    border-top: 1px solid #66CCFF;
-}
-
-.dateHead{
+.calendarTable{
+    vertical-align: top;
 }
 
 .dateTable{
+}
 
+.dateHead{
+    font-weight: bold;
+}
+
+.selectMonthYearBar{
+    border-bottom: 1px solid #000066;
+}
+
+.fromToBar{
+    border-top: 1px solid #000066;
+    text-align: center;
 }
 
 .day{
     cursor: pointer;
     border: 1px solid #F0F5F5;
+    text-align: center;
 }
 
 .day:hover{
     background-color: #66CCFF;
-}
-
-.activeDates{ 
+    color: #FFFFFF;
 }
 
 .clickedDates{
     background-color: #66CCFF;
+    color: #FFFFFF;
 }
 
 .selectedDates{
     background-color: #FFFF66;
+    color: #66CCFF;
 }
 
 .invalidDates{
+    cursor: auto;
+    pointer-events: none;
+    border: none;
+}
+
+.todayDates{
+    font-weight: bold;
 }
 
 .fromToDisplay{

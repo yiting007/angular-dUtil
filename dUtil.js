@@ -1,17 +1,22 @@
 var app = angular.module('dUtilApp', []);
 
-app.directive('dUtilDiv', function($window){  //register a directive
+app.directive('datePicker', function($window){  //register a directive
     return {
         restrict: 'E',
+    // require: 'ngModel',
     replace: false,
-    template: ' <div class="datePicker" ng-click="handleClick()">\n <input class="datePickerInfo" type="text"  ng-click="clickDatePicker()" ng-model="displayDate" readonly placeholder="select date range"></input>\n <div class="calendar" ng-show="expandDatePicker">\n <div class="selectMonthYearBar">\n <button ng-click="previousMonth()">Previous</button>\n <select ng-model="range" ng-options="range.name for range in ranges" ng-change="quickDateRange(range)"></select>\n <button ng-click="nextMonth()">Next</button>\n </div>\n \n <table>\n <thead class="dateHead">\n <td ng-repeat="d in dpObj.displayYearMonth track by $index">{{ d }} </td>\n </thead>\n \n <td ng-repeat="row in dpObj.rows">\n <div>\n <table class="dateTable">\n <thead>\n <tr>\n <td>Su</td>\n <td>Mo</td>\n <td>Tu</td>\n <td>We</td>\n <td>Th</td>\n <td>Fr</td>\n <td>Sa</td>\n </tr>\n </thead>\n <tbody>\n <tr ng-repeat="week in row">\n <td ng-repeat="day in week track by $index" class="day" ng-class="getClassForDays($parent.$index, $index, $parent.$parent.$index)" ng-click="onDayClick($parent.$index, $index, $parent.$parent.$index)">{{ day }}</td>\n </tr>\n </tbody>\n </table>\n </div>\n </td>\n <tbody>\n <tbody>\n </table>\n <div class=fromToBar>\n From <input ng-class="{fromToDisplay: fromDateToSelect}" ng-model="fromDate" type="text" readonly></input>\n To <input ng-class="{fromToDisplay: !fromDateToSelect}" ng-model="toDate" type="text" readonly></input>\n </div>\n </div>\n </div>\n ',
+    // templateUrl: 'myUtil/dUtil_templates.html',
+    template: ' <div class="datePicker" ng-click="handleClick()"> <input class="datePickerInfo" type="text"  ng-click="clickDatePicker()" ng-model="displayDate" readonly placeholder="select date range"></input> <div class="calendar" ng-show="expandDatePicker"> <div class="selectMonthYearBar"> <button ng-click="previousMonth()">Previous</button> <select ng-model="range" ng-options="range.name for range in ranges" ng-change="quickDateRange(range)"></select> <button ng-click="nextMonth()">Next</button> </div> <table class="datePickerTable"> <thead class="calendarHead"> <td ng-repeat="d in dpObj.displayYearMonth track by $index">{{ d }} </td> </thead> <tr class="calendarTable"> <td ng-repeat="row in dpObj.rows"> <table class="dateTable"> <thead class="dateHead"> <tr> <td>S</td> <td>M</td> <td>T</td> <td>W</td> <td>T</td> <td>F</td> <td>S</td> </tr> </thead> <tbody> <tr ng-repeat="week in row"> <td ng-repeat="day in week track by $index" class="day" ng-class="getClassForDays($parent.$index, $index, $parent.$parent.$index)" ng-click="onDayClick($parent.$index, $index, $parent.$parent.$index)">{{ day }}</td> </tr> </tbody> </table> </td> </tr> </table> <div class=fromToBar> From <input ng-class="{fromToDisplay: fromDateToSelect}" ng-model="fromDate" type="text" readonly></input> To <input ng-class="{fromToDisplay: !fromDateToSelect}" ng-model="toDate" type="text" readonly></input> </div> </div> </div> ',
+
     link: function(scope, element, attrs){
         var clickInsideDatePicker = false;
         var fromBeforeTo = true;
         scope.fromDateToSelect = true;
         scope.expandDatePicker = false;
-        //bind the click event, so click anywhere exclude the datepicker will
-        //trigger the datepicker to close
+        /**
+        * @description Bind the click event, so click anywhere exclude the datepicker
+        * will trigger the datepicker to close
+        */
         angular.element(document).bind("click", function(event){
             scope.$apply(function(){
                 if(!clickInsideDatePicker){
@@ -21,8 +26,6 @@ app.directive('dUtilDiv', function($window){  //register a directive
             });
         });
 
-
-        scope.years = getYears();
         scope.ranges = [ 
         {name: 'Custom ranges', v: '-1'},
         {name: 'Today', v: '0'},
@@ -34,18 +37,8 @@ app.directive('dUtilDiv', function($window){  //register a directive
         ];
         scope.range = scope.ranges[0];
 
-        var calendarNum = +attrs.calendarnum;  //default is 3
-        var dateFormat = attrs.format;  //default is YYYY-MM-DD
-
-        function getYears(){
-            var y = [];
-            var currentYear = +moment().year();    //woo, the magical + sign!
-            var numYears = +attrs.years;
-            for(var i = currentYear-numYears; i <= currentYear+numYears; i++){
-                y.push(i);
-            }
-            return y;
-        };
+        var calendarNum = scope.calendarNum;
+        var dateFormat = scope.format;
 
         var startMoment, endMoment;
         var today = moment();
@@ -57,6 +50,9 @@ app.directive('dUtilDiv', function($window){  //register a directive
         scope.dpObj.rows= [];
         scope.dpObj.spaces = [];
 
+        /**
+        * @description Update the calendars when year or month changes
+        */
         scope.$watch('year+month', function(newValue){
             var momentSet;
             if(!scope.year || !scope.month){
@@ -74,7 +70,10 @@ app.directive('dUtilDiv', function($window){  //register a directive
         });
 
 
-        //update day, month and year values for each calendar
+        /**
+        * @description Update day, month and year values for each calendar
+        * @calledBy scope.$watch('year+month')
+        */
         function calUpdates(init){
             var momentSet = [];
             if(init){
@@ -96,7 +95,9 @@ app.directive('dUtilDiv', function($window){  //register a directive
             }
         }
 
-        //generates each row of the selected month and year
+        /**
+        * @description Generates each row for the calendar (the dates)
+        */
         function getRows(momentDate, rows, cal){
             rows.splice(0, rows.length-1);
             startMoment = momentDate.clone().startOf('month').startOf('week');
@@ -127,26 +128,9 @@ app.directive('dUtilDiv', function($window){  //register a directive
             }
         }
 
-        scope.$watch('externalDate', function(newValue){
-            if(newValue){
-                if(scope.fromDateToSelect){
-                    scope.fromDate = newValue;
-                    scope.fromDateToSelect = false;
-                }else{
-                    //check if to is after from
-                    var to = moment(newValue, dateFormat);
-                    if(to.isAfter(scope.fromDate)){
-                        scope.toDate = newValue;
-                        scope.fromDateToSelect = true;
-                        fromBeforeTo = true;
-                    }else{
-                        fromBeforeTo = false;
-                    }
-                }
-                scope.displayDate = scope.fromDate + ' to ' + scope.toDate;
-            }
-        });
-
+        /**
+        * @description Range dropdown list event
+        */
         scope.quickDateRange = function(range){
             if(range.name === 'Custom ranges'){
                 return;
@@ -165,17 +149,27 @@ app.directive('dUtilDiv', function($window){  //register a directive
             }
             scope.fromDate = from.format(dateFormat);
             scope.toDate = to.format(dateFormat);
+            scope.displayDate = scope.fromDate + ' to ' + scope.toDate;
         }
 
+        /**
+        * @description Expand date picker when clicked on it
+        */
         scope.clickDatePicker = function(){
             scope.expandDatePicker = !scope.expandDatePicker;
         };
 
+        /**
+        * @description Detect if the click is inside date picker
+        */
         scope.handleClick = function(){
             clickInsideDatePicker = true;
         };
 
-        //called by onDayClick and getClassForDays
+        /**
+        * @description Decide the start day of month
+        * @calledBy onDayClick, getClassForDays
+        */
         function getCurrentDate(rowIndex, colIndex, calendar){
             var start = scope.dpObj.spaces[calendar];
             var sMoment = moment(scope.dpObj.year[calendar] + '-' + scope.dpObj.month[calendar] + '- 01', dateFormat);
@@ -185,12 +179,45 @@ app.directive('dUtilDiv', function($window){  //register a directive
             return sMoment.add((rowIndex*7)+colIndex, 'days');
         }
 
+        /**
+        * @description Update externalDate when a day being clicked on
+        */
         scope.onDayClick = function(rowIndex, colIndex, calendar){
             var dateClicked = getCurrentDate(rowIndex, colIndex, calendar);
             scope.externalDate = dateClicked.format(dateFormat);
+            clickUpdate(scope.externalDate);
             scope.range = scope.ranges[0];
         };
+        
+        /**
+        * @description Update from and to dates
+        * @calledBy onDayClick
+        */
+        function clickUpdate(newValue){
+            if(newValue){
+                if(scope.fromDateToSelect){
+                    scope.fromDate = newValue;
+                    scope.fromDateToSelect = false;
+                }else{
+                    //check if to is after from
+                    var to = moment(newValue, dateFormat);
+                    if (!to.isBefore(scope.fromDate)){  //cannot select the same day?
+                        scope.toDate = newValue;
+                        scope.fromDateToSelect = true;
+                        fromBeforeTo = true;
+                    }else{
+                        fromBeforeTo = false;
+                    }
+                }
+                scope.displayDate = scope.fromDate + ' to ' + scope.toDate;
+            }
+        }
 
+
+
+        /**
+         * @description Update calendars to one month before
+        */
         scope.previousMonth = function(){
             var calendar = calendarNum - 1; //right most calendar
             var sMoment = moment(scope.dpObj.year[calendar] + '-' + scope.dpObj.month[calendar] + '- 01', dateFormat);
@@ -199,6 +226,9 @@ app.directive('dUtilDiv', function($window){  //register a directive
             scope.year = sMoment.year();
         }
 
+        /**
+        * @description Update calendars to one month after
+        */
         scope.nextMonth = function(){
             var calendar = calendarNum - 1; //right most calendar
             var sMoment = moment(scope.dpObj.year[calendar] + '-' + scope.dpObj.month[calendar] + '- 01', dateFormat);
@@ -207,16 +237,24 @@ app.directive('dUtilDiv', function($window){  //register a directive
             scope.year = sMoment.year();
         }
 
-        //set dynamic css class for each date
+        /**
+        * @description Set dynamic css class for each date
+        */
         scope.getClassForDays = function(rowIndex, colIndex, calendar){
             var currentDate = getCurrentDate(rowIndex, colIndex, calendar);
+            var sMoment = moment(scope.dpObj.year[calendar] + '-' + scope.dpObj.month[calendar] + '- 01', dateFormat);
             var classes = {
                 activeDates: false,
                 clickedDates: false,
                 invalidDates: false,
+                todayDates: false,
                 selectedDates: false
             };
-            if(!scope.fromDateToSelect && scope.externalDate){
+            if (currentDate.isBefore(sMoment)) {
+                classes.invalidDates = true;
+                return classes;
+            }
+            if(!scope.fromDateToSelect && scope.externalDate){  //highlights the clicked date
                 var external = moment(scope.externalDate, dateFormat);
                 classes.clickedDates = currentDate.isSame(external) && fromBeforeTo;
             }
@@ -225,16 +263,23 @@ app.directive('dUtilDiv', function($window){  //register a directive
                 var to = moment(scope.toDate, dateFormat);
                 classes.selectedDates = !from.isAfter(currentDate) && !to.isBefore(currentDate);
             }
+            if (currentDate.isSame(moment().format(dateFormat))) {
+                classes.todayDates = true;
+            }
             return classes;
         };
     },
     scope: {
-        externalDate: "=datePicker"
-    }
+        format: '=?',
+        calendarNum: '=?',
+        fromDate: '=?',
+        toDate: '=?'
+    },
+    controller: 
+        function($scope){
+            $scope.format = $scope.format || 'YYYY-MM-DD';
+            $scope.calendarNum = $scope.calendarNum || 3;
+        }
     };
 });
 
-
-app.controller('testController', function($scope, $filter){
-
-});
