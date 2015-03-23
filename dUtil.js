@@ -1,14 +1,28 @@
 var app = angular.module('dUtilApp', []);
 
-app.directive('datePicker', function($window){  //register a directive
+app.factory('datePickerFactory', function(){
+
+    var datePickerFactory = function(){
+    };
+
+    datePickerFactory.prototype.getMoment = function(year, month, day){
+        var newDate = moment(year+ '-' + month + '-' + day, 'YYYY-MM-DD');//parser ignores non-alphanumeric characters(both - and / are fine)
+        return newDate;
+    };
+
+    return datePickerFactory;
+});
+
+app.directive('datePicker', function($window, datePickerFactory){  //register a directive
     return {
         restrict: 'E',
-    // require: 'ngModel',
+    require: 'ngModel',
     replace: false,
     // templateUrl: 'myUtil/dUtil_templates.html',
-    template: ' <div class="datePicker" ng-click="handleClick()"> <input class="datePickerInfo" type="text"  ng-click="clickDatePicker()" ng-model="displayDate" readonly placeholder="select date range"></input> <div class="calendar" ng-show="expandDatePicker"> <div class="selectMonthYearBar"> <button ng-click="previousMonth()">&#8592</button> <select ng-model="range" ng-options="range.name for range in ranges" ng-change="quickDateRange(range)"></select> <button ng-click="nextMonth()">&#8594</button> </div> <table class="datePickerTable"> <thead class="calendarHead"> <td ng-repeat="d in dpObj.displayYearMonth track by $index">{{ d }} </td> </thead> <tr class="calendarTable"> <td ng-repeat="row in dpObj.rows"> <table class="dateTable"> <thead class="dateHead"> <tr> <td>S</td> <td>M</td> <td>T</td> <td>W</td> <td>T</td> <td>F</td> <td>S</td> </tr> </thead> <tbody> <tr ng-repeat="week in row"> <td ng-repeat="day in week track by $index" class="day" ng-class="getClassForDays($parent.$index, $index, $parent.$parent.$index)" ng-click="onDayClick($parent.$index, $index, $parent.$parent.$index)">{{ day }}</td> </tr> </tbody> </table> </td> </tr> </table> <div class=fromToBar> From <input ng-class="{fromToDisplay: fromDateToSelect}" ng-model="fromDate" type="text" readonly></input> To <input ng-class="{fromToDisplay: !fromDateToSelect}" ng-model="toDate" type="text" readonly></input> </div> </div> </div> ',
+    template: ' <div class="datePicker" ng-click="handleClick()"> <input class="datePickerInfo" type="text"  ng-click="clickDatePicker()" ng-model="dateInfo.displayDate" readonly placeholder="select date range"></input> <div class="calendar" ng-show="expandDatePicker"> <div class="selectMonthYearBar"> <button ng-click="previousMonth()">&#8592</button> <select ng-model="range" ng-options="range.name for range in ranges" ng-change="quickDateRange(range)"></select> <button ng-click="nextMonth()">&#8594</button> </div> <table class="datePickerTable"> <thead class="calendarHead"> <td ng-repeat="d in dpObj.displayYearMonth track by $index">{{ d }} </td> </thead> <tr class="calendarTable"> <td ng-repeat="row in dpObj.rows"> <table class="dateTable"> <thead class="dateHead"> <tr> <td>S</td> <td>M</td> <td>T</td> <td>W</td> <td>T</td> <td>F</td> <td>S</td> </tr> </thead> <tbody> <tr ng-repeat="week in row"> <td ng-repeat="day in week track by $index" class="day" ng-class="getClassForDays($parent.$index, $index, $parent.$parent.$index)" ng-click="onDayClick($parent.$index, $index, $parent.$parent.$index)">{{ day }}</td> </tr> </tbody> </table> </td> </tr> </table> <div class=fromToBar> From <input ng-class="{fromToDisplay: fromDateToSelect}" ng-model="dateInfo.fromDate" type="text" readonly></input> To <input ng-class="{fromToDisplay: !fromDateToSelect}" ng-model="dateInfo.toDate" type="text" readonly></input> </div> </div> </div> ',
 
-    link: function(scope, element, attrs){
+    link: function(scope, element, attrs, ngModelCtrl){
+
         var clickInsideDatePicker = false;
         var fromBeforeTo = true;
         scope.fromDateToSelect = true;
@@ -25,6 +39,8 @@ app.directive('datePicker', function($window){  //register a directive
                 clickInsideDatePicker= false;
             });
         });
+
+        var dateHelper = new datePickerFactory();
 
         scope.ranges = [ 
         {name: 'Custom ranges', v: '-1'},
@@ -50,6 +66,60 @@ app.directive('datePicker', function($window){  //register a directive
         scope.dpObj.rows= [];
         scope.dpObj.spaces = [];
 
+        scope.dateInfo = {};    //I'm using an object to bind to ngModel
+
+
+        /**
+        * @description Since ng-model does not do a deep watch, 
+        * $render() is only invoked if the values of $modelValue and $viewValue are actually different from their previous value. 
+        * If $modelValue or $viewValue are objects (rather than a string or number) 
+        * then $render() will not be invoked if you only change a property on the objects.
+        */
+        ngModelCtrl.$render = function() {
+            if (ngModelCtrl.$viewValue) {
+                scope.dateInfo.fromDate = ngModelCtrl.$viewValue.fromDate;
+                scope.dateInfo.toDate = ngModelCtrl.$viewValue.toDate;
+            }
+        };
+
+        /**
+        * @description Update the ngModel
+        * ngChange won't evaluate if the model is changed programmatically and not by a change to the input value
+        * so update model required
+        * Also: If the new value is an object (rather than a string or a number), 
+        * so we should make a copy of the object before passing it to $setViewValue.
+        */
+        function updateModel(){
+            var newVal = angular.copy(scope.dateInfo);
+            ngModelCtrl.$setViewValue(newVal);
+        }
+
+
+        /**
+        * @description ngModel validators
+        * Why the front end doesn't read values from model.$error???
+        */
+        ngModelCtrl.$parsers.unshift(checkValidation);  //value modified by the users
+        ngModelCtrl.$formatters.unshift(checkValidation);   //model modified in the code
+
+        function checkValidation(viewValue){
+            if (viewValue && viewValue.toDate) {
+                var to = moment(viewValue.toDate, dateFormat);
+                if (!to.isBefore(viewValue.fromDate)) {
+                    ngModelCtrl.$setValidity('datePicker', true);
+                    console.log('set true');
+                    console.log(angular.toJson(ngModelCtrl.$error));
+                    return viewValue;
+                }else{
+                    ngModelCtrl.$setValidity('datePicker', false);
+                    console.log('set false');
+                    console.log(angular.toJson(ngModelCtrl.$error));
+                    // return undefined;
+                    return viewValue;
+                }
+            }
+        }
+
         /**
         * @description Update the calendars when year or month changes
         */
@@ -65,7 +135,7 @@ app.directive('datePicker', function($window){  //register a directive
                 if(!scope.day){
                     scope.day = moment().format('DD');
                 }
-                momentSet = moment(scope.year+ '-' + scope.month + '-' + scope.day, dateFormat);
+                momentSet = dateHelper.getMoment(scope.year, scope.month, scope.day);
                 calUpdates(false);
             }
         });
@@ -80,7 +150,9 @@ app.directive('datePicker', function($window){  //register a directive
             if(init){
                 momentSet.push(moment());
             }else{
-                momentSet.push(moment(scope.year+ '-' + scope.month + '-' + scope.day, dateFormat)); //current
+
+                momentSet.push(dateHelper.getMoment(scope.year, scope.month, scope.day));
+                // momentSet.push(moment(scope.year+ '-' + scope.month + '-' + scope.day, 'YYYY-MM-DD')); //current
             }
             for(var i=1; i<calendarNum; i++){
                 momentSet.push(momentSet[0].clone().subtract(i, 'months')); //1
@@ -148,9 +220,10 @@ app.directive('datePicker', function($window){  //register a directive
                               from.subtract(range.v, 'days');   //what to show then range > 3 month?
                               break;
             }
-            scope.fromDate = from.format(dateFormat);
-            scope.toDate = to.format(dateFormat);
-            scope.displayDate = scope.fromDate + ' to ' + scope.toDate;
+            scope.dateInfo.fromDate = from.format(dateFormat);
+            scope.dateInfo.toDate = to.format(dateFormat);
+            scope.dateInfo.displayDate = scope.dateInfo.fromDate + ' to ' + scope.dateInfo.toDate;
+            updateModel();
         }
 
         /**
@@ -173,7 +246,7 @@ app.directive('datePicker', function($window){  //register a directive
         */
         function getCurrentDate(rowIndex, colIndex, calendar){
             var start = scope.dpObj.spaces[calendar];
-            var sMoment = moment(scope.dpObj.year[calendar] + '-' + scope.dpObj.month[calendar] + '- 01', dateFormat);
+            var sMoment = dateHelper.getMoment(scope.dpObj.year[calendar], scope.dpObj.month[calendar], '01');
             if(start > 0){
                 sMoment.subtract(start, 'days');
             }
@@ -197,31 +270,30 @@ app.directive('datePicker', function($window){  //register a directive
         function clickUpdate(newValue){
             if(newValue){
                 if(scope.fromDateToSelect){
-                    scope.fromDate = newValue;
+                    scope.dateInfo.fromDate = newValue;
                     scope.fromDateToSelect = false;
                 }else{
                     //check if to is after from
                     var to = moment(newValue, dateFormat);
-                    if (!to.isBefore(scope.fromDate)){  //cannot select the same day?
-                        scope.toDate = newValue;
+                    if (!to.isBefore(scope.dateInfo.fromDate)){
+                        scope.dateInfo.toDate = newValue;
                         scope.fromDateToSelect = true;
                         fromBeforeTo = true;
                     }else{
                         fromBeforeTo = false;
                     }
                 }
-                scope.displayDate = scope.fromDate + ' to ' + scope.toDate;
+                scope.dateInfo.displayDate = scope.dateInfo.fromDate + ' to ' + scope.dateInfo.toDate;
+                updateModel();
             }
         }
-
-
 
         /**
          * @description Update calendars to one month before
         */
         scope.previousMonth = function(){
             var calendar = calendarNum - 1; //right most calendar
-            var sMoment = moment(scope.dpObj.year[calendar] + '-' + scope.dpObj.month[calendar] + '- 01', dateFormat);
+            var sMoment = dateHelper.getMoment(scope.dpObj.year[calendar], scope.dpObj.month[calendar], '01');
             sMoment.subtract(1, 'month');
             scope.month = sMoment.month() + 1;
             scope.year = sMoment.year();
@@ -232,7 +304,7 @@ app.directive('datePicker', function($window){  //register a directive
         */
         scope.nextMonth = function(){
             var calendar = calendarNum - 1; //right most calendar
-            var sMoment = moment(scope.dpObj.year[calendar] + '-' + scope.dpObj.month[calendar] + '- 01', dateFormat);
+            var sMoment = dateHelper.getMoment(scope.dpObj.year[calendar], scope.dpObj.month[calendar], '01');
             sMoment.add(1, 'month');
             scope.month = sMoment.month() + 1;
             scope.year = sMoment.year();
@@ -243,7 +315,7 @@ app.directive('datePicker', function($window){  //register a directive
         */
         scope.getClassForDays = function(rowIndex, colIndex, calendar){
             var currentDate = getCurrentDate(rowIndex, colIndex, calendar);
-            var sMoment = moment(scope.dpObj.year[calendar] + '-' + scope.dpObj.month[calendar] + '- 01', dateFormat);
+            var sMoment = dateHelper.getMoment(scope.dpObj.year[calendar], scope.dpObj.month[calendar], '01');
             var classes = {
                 activeDates: false,
                 clickedDates: false,
@@ -259,9 +331,9 @@ app.directive('datePicker', function($window){  //register a directive
                 var external = moment(scope.externalDate, dateFormat);
                 classes.clickedDates = currentDate.isSame(external) && fromBeforeTo;
             }
-            if(scope.fromDate && scope.toDate){ //highlights the date range
-                var from = moment(scope.fromDate, dateFormat);
-                var to = moment(scope.toDate, dateFormat);
+            if(scope.dateInfo.fromDate && scope.dateInfo.toDate){ //highlights the date range
+                var from = moment(scope.dateInfo.fromDate, dateFormat);
+                var to = moment(scope.dateInfo.toDate, dateFormat);
                 classes.selectedDates = !from.isAfter(currentDate) && !to.isBefore(currentDate);
             }
             if (currentDate.isSame(moment().format(dateFormat))) {
@@ -273,8 +345,6 @@ app.directive('datePicker', function($window){  //register a directive
     scope: {
         format: '=?',
         calendarNum: '=?',
-        fromDate: '=?',
-        toDate: '=?',
         range: '=?'
     },
     controller: 
