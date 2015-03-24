@@ -19,12 +19,13 @@ app.directive('datePicker', function($window, datePickerFactory){  //register a 
     require: 'ngModel',
     replace: false,
     // templateUrl: 'myUtil/dUtil_templates.html',
-    template: ' <div class="datePicker" ng-click="handleClick()"> <input class="datePickerInfo" type="text"  ng-click="clickDatePicker()" ng-model="dateInfo.displayDate" readonly placeholder="select date range"></input> <div class="calendar" ng-show="expandDatePicker"> <div class="selectMonthYearBar"> <button ng-click="previousMonth()">&#8592</button> <select ng-model="range" ng-options="range.name for range in ranges" ng-change="quickDateRange(range)"></select> <button ng-click="nextMonth()">&#8594</button> </div> <table class="datePickerTable"> <thead class="calendarHead"> <td ng-repeat="d in dpObj.displayYearMonth track by $index">{{ d }} </td> </thead> <tr class="calendarTable"> <td ng-repeat="row in dpObj.rows"> <table class="dateTable"> <thead class="dateHead"> <tr> <td>S</td> <td>M</td> <td>T</td> <td>W</td> <td>T</td> <td>F</td> <td>S</td> </tr> </thead> <tbody> <tr ng-repeat="week in row"> <td ng-repeat="day in week track by $index" class="day" ng-class="getClassForDays($parent.$index, $index, $parent.$parent.$index)" ng-click="onDayClick($parent.$index, $index, $parent.$parent.$index)">{{ day }}</td> </tr> </tbody> </table> </td> </tr> </table> <div class=fromToBar> From <input ng-class="{fromToDisplay: fromDateToSelect}" ng-model="dateInfo.fromDate" type="text" readonly></input> To <input ng-class="{fromToDisplay: !fromDateToSelect}" ng-model="dateInfo.toDate" type="text" readonly></input> </div> </div> </div> ',
+    template: ' <div class="datePicker" ng-click="handleClick()" > <input ng-class="{datePickerInvalid: !validRange}" class="datePickerInfo" type="text"  ng-click="clickDatePicker()" ng-model="dateInfo.displayDate" readonly placeholder="select date range"></input> <div class="calendar" ng-show="expandDatePicker"> <div class="selectMonthYearBar"> <button ng-click="previousMonth()">&#8592</button> <select ng-model="range" ng-options="range.name for range in ranges" ng-change="quickDateRange(range)"></select> <button ng-click="nextMonth()">&#8594</button> </div> <table class="datePickerTable"> <thead class="calendarHead"> <td ng-repeat="d in dpObj.displayYearMonth track by $index">{{ d }} </td> </thead> <tr class="calendarTable"> <td ng-repeat="row in dpObj.rows"> <table class="dateTable"> <thead class="dateHead"> <tr> <td>S</td> <td>M</td> <td>T</td> <td>W</td> <td>T</td> <td>F</td> <td>S</td> </tr> </thead> <tbody> <tr ng-repeat="week in row"> <td ng-repeat="day in week track by $index" class="day" ng-class="getClassForDays($parent.$index, $index, $parent.$parent.$index)" ng-click="onDayClick($parent.$index, $index, $parent.$parent.$index)">{{ day }}</td> </tr> </tbody> </table> </td> </tr> </table> <div class=fromToBar> From <input ng-class="{fromToDisplay: fromDateToSelect}" ng-model="dateInfo.fromDate" type="text" readonly></input> To <input ng-class="{fromToDisplay: !fromDateToSelect}" ng-model="dateInfo.toDate" type="text" readonly></input> </div> </div> </div> ',
 
     link: function(scope, element, attrs, ngModelCtrl){
 
         var clickInsideDatePicker = false;
         var fromBeforeTo = true;
+        scope.validRange = true;
         scope.fromDateToSelect = true;
         scope.expandDatePicker = false;
         /**
@@ -100,21 +101,21 @@ app.directive('datePicker', function($window, datePickerFactory){  //register a 
         * Why the front end doesn't read values from model.$error???
         */
         ngModelCtrl.$parsers.unshift(checkValidation);  //value modified by the users
-        ngModelCtrl.$formatters.unshift(checkValidation);   //model modified in the code
+        ngModelCtrl.$formatters.push(checkValidation);   //model modified in the code
+        attrs.$observe('datePicker', function(){
+            checkValidation(ngModelCtrl.$viewValue);
+        });
 
         function checkValidation(viewValue){
             if (viewValue && viewValue.toDate) {
                 var to = moment(viewValue.toDate, dateFormat);
                 if (!to.isBefore(viewValue.fromDate)) {
                     ngModelCtrl.$setValidity('datePicker', true);
-                    console.log('set true');
-                    console.log(angular.toJson(ngModelCtrl.$error));
+                    scope.validRange = true;
                     return viewValue;
                 }else{
                     ngModelCtrl.$setValidity('datePicker', false);
-                    console.log('set false');
-                    console.log(angular.toJson(ngModelCtrl.$error));
-                    // return undefined;
+                    scope.validRange = false;
                     return viewValue;
                 }
             }

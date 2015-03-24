@@ -5,9 +5,12 @@
 
 .datePickerInfo{
     cursor: pointer;
-    /* width: 100%; */  /* why this doesn't work? */
     width: 13em;
     text-align: center;
+}
+
+.datePickerInvalid{
+    border-color: #FF0000;
 }
 
 .datePickerTable{
@@ -80,5 +83,5 @@
 }
 
 .fromToDisplay{
-    border-color: #4D90FE;
+    border-color: #0099CC;
 }
