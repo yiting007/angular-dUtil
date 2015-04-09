@@ -9,6 +9,11 @@
     text-align: center;
 }
 
+.datePickerErrMsg{
+    color: #FF0000;
+    margin-left: 10px;
+}
+
 .datePickerInvalid{
     border-color: #FF0000;
 }
