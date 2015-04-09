@@ -143,21 +143,30 @@ app.directive('datePicker', function($window, datePickerFactory) { //register a 
       //     }
       // }
 
+      /**
+      * @description Update directive's dateInfo object
+      *     Changes are made from the model and we get
+      *     the updated value from ngModelCtrl's $viewValue
+      */
       scope.$watch(function ngModelWatch() {
         if (ngModelCtrl && ngModelCtrl.$viewValue) {
           var update = false;
-          if (ngModelCtrl.$viewValue.fromDate != scope.dateInfo.fromDate) {
+          if ( ngModelCtrl.$viewValue.range && 
+              ngModelCtrl.$viewValue.range['name'] != 'Custom ranges' && 
+              ngModelCtrl.$viewValue.range['name'] != scope.dateInfo.range['name'] ) {
+            scope.dateInfo.range = angular.copy(ngModelCtrl.$viewValue.range);  //UI won't updated?!
+            scope.quickDateRange(ngModelCtrl.$viewValue.range);
+          }else if (ngModelCtrl.$viewValue.fromDate != scope.dateInfo.fromDate) {
             scope.dateInfo.fromDate = ngModelCtrl.$viewValue.fromDate;
             update = true;
-          }
-          if (ngModelCtrl.$viewValue.toDate != scope.dateInfo.toDate) {
+          }else if (ngModelCtrl.$viewValue.toDate != scope.dateInfo.toDate) {
             scope.dateInfo.toDate = ngModelCtrl.$viewValue.toDate;
             update = true;
           }
           if (update) {
-            scope.dateInfo.displayDate = scope.dateInfo.fromDate + ' to ' + scope.dateInfo.toDate;
-            updateModel();
-
+              scope.dateInfo.displayDate = scope.dateInfo.fromDate + ' to ' + scope.dateInfo.toDate;
+              scope.dateInfo.range = scope.ranges[0];
+              updateModel();
           }
         }
       });
@@ -248,12 +257,12 @@ app.directive('datePicker', function($window, datePickerFactory) { //register a 
        * @description Range dropdown list event
        */
       scope.quickDateRange = function(range) {
-        if (range.name === 'Custom ranges') {
+        if (range['name'] === 'Custom ranges') {
           return;
         }
         var from = moment(); //today
         var to = moment();
-        switch (range.name) {
+        switch (range['name']) {
           case 'Today':
             break; //do nothing
           case 'Yesterday':
@@ -261,7 +270,7 @@ app.directive('datePicker', function($window, datePickerFactory) { //register a 
             to.subtract(1, 'days');
             break;
           default:
-            from.subtract(range.v, 'days'); //what to show then range > 3 month?
+            from.subtract(range['v'], 'days'); //what to show then range > 3 month?
             break;
         }
         scope.dateInfo.fromDate = from.format(dateFormat);
@@ -305,6 +314,7 @@ app.directive('datePicker', function($window, datePickerFactory) { //register a 
         scope.externalDate = dateClicked.format(dateFormat);
         clickUpdate(scope.externalDate);
         scope.dateInfo.range = scope.ranges[0];
+        updateModel();  //update model right after range changes
       };
 
       /**
